@@ -17,6 +17,7 @@ package v24tov31
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"path"
 	"reflect"
 
@@ -49,7 +50,13 @@ func Check2_4(cfg old.Config, fsMap map[string]string) error {
 	fsMap["root"] = "/"
 	for _, fs := range cfg.Storage.Filesystems {
 		if _, ok := fsMap[fs.Name]; !ok {
-			return util.NoFilesystemError(fs.Name)
+			// generate a random path
+			p, err := ioutil.TempDir("", fs.Name)
+			if err != nil {
+				return fmt.Errorf("creating tmp fs directory: %w", err)
+			}
+
+			fsMap[fs.Name] = p
 		}
 	}
 
