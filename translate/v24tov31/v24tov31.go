@@ -49,6 +49,15 @@ func Check2_4(cfg old.Config, fsMap map[string]string) error {
 	}
 	fsMap["root"] = "/"
 	for _, fs := range cfg.Storage.Filesystems {
+		if len(fs.Name) == 0 {
+			f, err := ioutil.TempFile("", "ignition-fs-*")
+			if err != nil {
+				return fmt.Errorf("creating tmp fs file name: %w", err)
+			}
+
+			fs.Name = f.Name()
+		}
+
 		if _, ok := fsMap[fs.Name]; !ok {
 			// generate a random path
 			p, err := ioutil.TempDir("", fs.Name)
