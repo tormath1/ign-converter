@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"path"
 	"reflect"
+	"strings"
 
 	old "github.com/coreos/ignition/config/v2_3/types"
 	oldValidate "github.com/coreos/ignition/config/validate"
@@ -347,12 +348,50 @@ func translateFilesystems(fss []old.Filesystem, m map[string]string) (ret []type
 		if f.Mount == nil {
 			f.Mount = &old.Mount{}
 		}
+
+		wipe := util.BoolP(f.Mount.WipeFilesystem)
+		label := f.Mount.Label
+		uuid := f.Mount.UUID
+
+		// If `wipe` is set to `false` but we have a `"create": {...}` section, we try
+		// to convert it.
+		if wipe == nil && f.Mount.Create != nil {
+			wipe = util.BoolP(f.Mount.Create.Force)
+
+			for _, opt := range f.Mount.Create.Options {
+				o := string(opt)
+				// Example: `--label=ROOT` or `-L ROOT`
+				if strings.Contains(o, "label") || strings.Contains(o, "-L") {
+					l := strings.SplitN(o, "=", 2)
+					// In order to avoid ignition to panic, we continue if the
+					// size is not expected
+					if len(l) < 2 {
+						continue
+					}
+
+					label = &l[1]
+				}
+
+				// Example `-m uuid=1234` or `-U 1234`
+				if strings.Contains(o, "uuid") || strings.Contains(o, "-U") {
+					u := strings.SplitN(o, "=", 2)
+					// In order to avoid ignition to panic, we continue if the
+					// size is not expected
+					if len(u) < 2 {
+						continue
+					}
+
+					uuid = &u[1]
+				}
+			}
+		}
+
 		ret = append(ret, types.Filesystem{
 			Device:         f.Mount.Device,
 			Format:         util.StrP(f.Mount.Format),
-			WipeFilesystem: util.BoolP(f.Mount.WipeFilesystem),
-			Label:          f.Mount.Label,
-			UUID:           f.Mount.UUID,
+			WipeFilesystem: wipe,
+			Label:          label,
+			UUID:           uuid,
 			Options:        translateFilesystemOptions(f.Mount.Options),
 			Path:           util.StrP(m[f.Name]),
 		})
