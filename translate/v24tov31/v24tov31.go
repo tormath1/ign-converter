@@ -17,6 +17,7 @@ package v24tov31
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"path"
 	"reflect"
 
@@ -49,7 +50,8 @@ func Check2_4(cfg old.Config, fsMap map[string]string) error {
 	fsMap["root"] = "/"
 	for _, fs := range cfg.Storage.Filesystems {
 		if _, ok := fsMap[fs.Name]; !ok {
-			return util.NoFilesystemError(fs.Name)
+			// generate a random path
+			fsMap[fs.Name] = fmt.Sprintf("/ignition/%s/%d", fs.Name, rand.Intn(100))
 		}
 	}
 
