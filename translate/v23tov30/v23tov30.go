@@ -349,10 +349,15 @@ func translateFilesystems(fss []old.Filesystem, m map[string]string) (ret []type
 		if f.Mount == nil {
 			f.Mount = &old.Mount{}
 		}
+		wipe := util.BoolP(f.Mount.WipeFilesystem)
+		if wipe == nil && f.Mount.Create != nil {
+			wipe = util.BoolP(f.Mount.Create.Force)
+		}
+
 		ret = append(ret, types.Filesystem{
 			Device:         f.Mount.Device,
 			Format:         util.StrP(f.Mount.Format),
-			WipeFilesystem: util.BoolP(f.Mount.WipeFilesystem),
+			WipeFilesystem: wipe,
 			Label:          f.Mount.Label,
 			UUID:           f.Mount.UUID,
 			Options:        translateFilesystemOptions(f.Mount.Options),
