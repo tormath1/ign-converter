@@ -1,4 +1,4 @@
-module github.com/coreos/ign-converter
+module github.com/tormath1/ign-converter
 
 go 1.15
 
