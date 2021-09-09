@@ -50,6 +50,10 @@ func Check2_4(cfg old.Config, fsMap map[string]string) error {
 	}
 	fsMap["root"] = "/"
 	for _, fs := range cfg.Storage.Filesystems {
+		if len(fs.Name) == 0 {
+			fs.Name = fmt.Sprintf("fs-%d", rand.Intn(1000))
+		}
+
 		if _, ok := fsMap[fs.Name]; !ok {
 			// generate a random path
 			fsMap[fs.Name] = fmt.Sprintf("/ignition/%s/%d", fs.Name, rand.Intn(100))
